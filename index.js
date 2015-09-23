@@ -88,8 +88,8 @@ module.exports = function(THREE) {
 
         this.setAzimuthalAngle = function (angle) {
             thetaDelta = angle - theta;
-            if(thetaDelta > Math.PI*2) {
-                thetaDelta -= Math.PI;
+            if(thetaDelta > Math.PI) {
+                thetaDelta -= Math.PI*2;
             } else if(thetaDelta < -Math.PI) {
                 thetaDelta += Math.PI*2;
             }
