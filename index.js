@@ -247,8 +247,8 @@ module.exports = function(THREE) {
 
                 phi = Math.atan2( Math.sqrt( offset.x * offset.x + offset.z * offset.z ), offset.y );
 
-                theta += thetaDelta;
-                phi += phiDelta;
+                theta += thetaDelta * (( this.enableDamping === true ) ? this.dampingFactor : 1);
+                phi += phiDelta * (( this.enableDamping === true ) ? this.dampingFactor : 1);
 
                 // restrict theta to be between desired limits
                 theta = Math.max( this.minAzimuthAngle, Math.min( this.maxAzimuthAngle, theta ) );
