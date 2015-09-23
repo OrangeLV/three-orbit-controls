@@ -80,6 +80,21 @@ module.exports = function(THREE) {
 
         };
 
+        this.setPolarAngle = function (angle) {
+
+            phiDelta = angle - phi;
+
+        };
+
+        this.setAzimuthalAngle = function (angle) {
+            thetaDelta = angle - theta;
+            if(thetaDelta > Math.PI*2) {
+                thetaDelta -= Math.PI;
+            } else if(thetaDelta < -Math.PI) {
+                thetaDelta += Math.PI*2;
+            }
+        };
+
         this.rotateLeft = function ( angle ) {
 
             thetaDelta -= angle;
@@ -344,6 +359,18 @@ module.exports = function(THREE) {
         this.getAzimuthalAngle = function () {
 
             return constraint.getAzimuthalAngle();
+
+        };
+
+        this.setPolarAngle = function (angle) {
+
+            constraint.setPolarAngle(angle);
+
+        };
+
+        this.setAzimuthalAngle = function (angle) {
+
+            constraint.setAzimuthalAngle(angle);
 
         };
 
