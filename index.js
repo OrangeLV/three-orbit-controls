@@ -18,6 +18,8 @@ module.exports = function(THREE) {
 
         this.object = object;
 
+        this.zoomScale = 0;
+
         // "target" sets the location of focus, where the object orbits around
         // and where it pans with respect to.
         this.target = new THREE.Vector3();
@@ -264,9 +266,9 @@ module.exports = function(THREE) {
                 // restrict radius to be between desired limits
                 radius = Math.max( this.minDistance, Math.min( this.maxDistance, radius ) );
 
-                var zoomScale = (this.maxDistance - radius) / (this.maxDistance - this.minDistance) || 0;
+                this.zoomScale = (this.maxDistance - radius) / (this.maxDistance - this.minDistance) || 0;
                 var peekScale = (this.maxPolarAngle - phi) /  (this.maxPolarAngle - this.minPolarAngle) * 2 - 1;
-                peekOffset.set(0, peekScale * zoomScale * this.peekDistance, 0);
+                peekOffset.set(0, peekScale * this.zoomScale * this.peekDistance, 0);
 
                 // move target to panned location
                 this.target.add( panOffset );
@@ -429,6 +431,15 @@ module.exports = function(THREE) {
 
         var state = STATE.NONE;
 
+        // for doubleclick tracking
+        var clicks = 0;
+        var timer = null;
+        var wait = 300;
+
+        // for zoom toggle
+        var dollyDirection;
+        var desiredZoomScale;
+
         // for reset
 
         this.target0 = this.target.clone();
@@ -480,6 +491,22 @@ module.exports = function(THREE) {
 
             this.update();
 
+        };
+
+        this.toggleZoom = function () {
+            if ( scope.enabled === false || scope.enableZoom === false ) return;
+
+            dollyDirection = +constraint.zoomScale.toFixed(2) > 0 ? 'dollyIn' : 'dollyOut';
+            desiredZoomScale = dollyDirection === 'dollyIn' ? 0 : 1;
+
+            function updateZoom() {
+                constraint[dollyDirection]( getZoomScale() );
+                if ( constraint.zoomScale !== desiredZoomScale ) {
+                    requestAnimationFrame( updateZoom );
+                } 
+            }
+
+            updateZoom();
         };
 
         function getAutoRotationAngle() {
@@ -643,6 +670,21 @@ module.exports = function(THREE) {
             scope.dispatchEvent( startEvent );
             scope.dispatchEvent( endEvent );
 
+        }
+
+        function onDoubleClick() {
+            clicks++;
+            if ( clicks === 1 ) {
+                timer = setTimeout(function () {
+                    clicks = 0;
+                }, wait);
+            } else {
+                clearTimeout( timer );
+
+                scope.toggleZoom();
+
+                clicks = 0;
+            }
         }
 
         function onKeyDown( event ) {
@@ -818,6 +860,7 @@ module.exports = function(THREE) {
         this.dispose = function() {
 
             this.domElement.removeEventListener( 'contextmenu', contextmenu, false );
+            this.domElement.removeEventListener( 'mousedown', onDoubleClick, false );
             this.domElement.removeEventListener( 'mousedown', onMouseDown, false );
             this.domElement.removeEventListener( 'mousewheel', onMouseWheel, false );
             this.domElement.removeEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
@@ -835,6 +878,7 @@ module.exports = function(THREE) {
 
         this.domElement.addEventListener( 'contextmenu', contextmenu, false );
 
+        this.domElement.addEventListener( 'mousedown', onDoubleClick, false );
         this.domElement.addEventListener( 'mousedown', onMouseDown, false );
         this.domElement.addEventListener( 'mousewheel', onMouseWheel, false );
         this.domElement.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
@@ -863,6 +907,16 @@ module.exports = function(THREE) {
 
             }
 
+        },
+
+        zoomScale : {
+
+            get: function () {
+
+                return this.constraint.zoomScale;
+
+            }
+            
         },
 
         target: {
