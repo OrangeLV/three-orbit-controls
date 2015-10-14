@@ -672,18 +672,32 @@ module.exports = function(THREE) {
 
         }
 
-        function onDoubleClick() {
+        function onDoubleClick( event ) {
+
+            if ( event.type === 'touchstart' ) {
+                
+                event.preventDefault();
+
+            }
+
             clicks++;
+            
             if ( clicks === 1 ) {
+                
                 timer = setTimeout(function () {
+                
                     clicks = 0;
+                
                 }, wait);
+
             } else {
+                
                 clearTimeout( timer );
 
                 scope.toggleZoom();
 
                 clicks = 0;
+
             }
         }
 
@@ -861,6 +875,7 @@ module.exports = function(THREE) {
 
             this.domElement.removeEventListener( 'contextmenu', contextmenu, false );
             this.domElement.removeEventListener( 'mousedown', onDoubleClick, false );
+            this.domElement.removeEventListener( 'touchstart', onDoubleClick, false );
             this.domElement.removeEventListener( 'mousedown', onMouseDown, false );
             this.domElement.removeEventListener( 'mousewheel', onMouseWheel, false );
             this.domElement.removeEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
@@ -879,6 +894,7 @@ module.exports = function(THREE) {
         this.domElement.addEventListener( 'contextmenu', contextmenu, false );
 
         this.domElement.addEventListener( 'mousedown', onDoubleClick, false );
+        this.domElement.addEventListener( 'touchstart', onDoubleClick, false );
         this.domElement.addEventListener( 'mousedown', onMouseDown, false );
         this.domElement.addEventListener( 'mousewheel', onMouseWheel, false );
         this.domElement.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
