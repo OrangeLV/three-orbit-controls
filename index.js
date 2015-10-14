@@ -494,19 +494,26 @@ module.exports = function(THREE) {
         };
 
         this.toggleZoom = function () {
+
             if ( scope.enabled === false || scope.enableZoom === false ) return;
 
             dollyDirection = +constraint.zoomScale.toFixed(2) > 0 ? 'dollyIn' : 'dollyOut';
             desiredZoomScale = dollyDirection === 'dollyIn' ? 0 : 1;
 
             function updateZoom() {
+
                 constraint[dollyDirection]( getZoomScale() );
+                
                 if ( constraint.zoomScale !== desiredZoomScale ) {
+
                     requestAnimationFrame( updateZoom );
+
                 } 
+
             }
 
             updateZoom();
+            
         };
 
         function getAutoRotationAngle() {
@@ -675,7 +682,7 @@ module.exports = function(THREE) {
         function onDoubleClick( event ) {
 
             if ( event.type === 'touchstart' ) {
-                
+
                 event.preventDefault();
 
             }
