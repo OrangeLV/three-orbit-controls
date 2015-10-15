@@ -433,8 +433,10 @@ module.exports = function(THREE) {
 
         // for doubleclick tracking
         var clicks = 0;
-        var timer = null;
         var wait = 300;
+        var doubleTapRadius = 24;
+        var lastTouch = null;
+        var distFromLastTouch = 0;
 
         // for zoom toggle
         var dollyDirection;
@@ -685,25 +687,47 @@ module.exports = function(THREE) {
 
                 event.preventDefault();
 
-            }
+                if ( event.touches.length > 1 ) return;
 
-            clicks++;
+                if ( lastTouch !== null ) {
+
+                    var touch = event.touches[0];
+
+                    var horizontalDist = touch.pageX - lastTouch.pageX;
+                    var verticalDist = touch.pageY - lastTouch.pageY;
+                    distFromLastTouch = Math.sqrt( Math.pow( horizontalDist, 2 ) + Math.pow( verticalDist, 2 ) );
+
+                } else {
+
+                    lastTouch = event.touches[0];
+                    distFromLastTouch = 0;
+
+                }
+
+                if ( distFromLastTouch <= doubleTapRadius ) {
+
+                    clicks++;
+
+                }
+
+            } else {
+
+                clicks++;
+                
+            }
             
             if ( clicks === 1 ) {
                 
-                timer = setTimeout(function () {
+                setTimeout(function () {
                 
                     clicks = 0;
-                
+                    lastTouch = null;
+
                 }, wait);
 
             } else {
                 
-                clearTimeout( timer );
-
                 scope.toggleZoom();
-
-                clicks = 0;
 
             }
         }
