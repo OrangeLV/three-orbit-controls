@@ -435,8 +435,8 @@ module.exports = function(THREE) {
         var clicks = 0;
         var wait = 300;
         var doubleTapRadius = 24;
-        var lastTouch = null;
-        var distFromLastTouch = 0;
+        var lastClick = null;
+        var distFromLastClick = 0;
 
         // for zoom toggle
         var dollyDirection;
@@ -689,39 +689,31 @@ module.exports = function(THREE) {
 
                 if ( event.touches.length > 1 ) return;
 
-                if ( lastTouch !== null ) {
+            }
 
-                    var touch = event.touches[0];
+            if ( lastClick !== null ) {
 
-                    var horizontalDist = touch.pageX - lastTouch.pageX;
-                    var verticalDist = touch.pageY - lastTouch.pageY;
-                    distFromLastTouch = Math.sqrt( Math.pow( horizontalDist, 2 ) + Math.pow( verticalDist, 2 ) );
+                var click = event.touches && event.touches[0] || event;
 
-                } else {
-
-                    lastTouch = event.touches[0];
-                    distFromLastTouch = 0;
-
-                }
-
-                if ( distFromLastTouch <= doubleTapRadius ) {
-
-                    clicks++;
-
-                }
+                var horizontalDist = click.pageX - lastClick.pageX;
+                var verticalDist = click.pageY - lastClick.pageY;
+                distFromLastClick = Math.sqrt( Math.pow( horizontalDist, 2 ) + Math.pow( verticalDist, 2 ) );
 
             } else {
 
-                clicks++;
-                
+                lastClick = event.touches && event.touches[0] || event;
+                distFromLastClick = 0;
+
             }
-            
+
+            if ( distFromLastClick <= doubleTapRadius ) clicks++;
+
             if ( clicks === 1 ) {
                 
                 setTimeout(function () {
                 
                     clicks = 0;
-                    lastTouch = null;
+                    lastClick = null;
 
                 }, wait);
 
