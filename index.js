@@ -1,5 +1,8 @@
 /*eslint semi: [2, "always"]*/
 /*eslint indent: 0*/
+
+var kefir = require( 'kefir' );
+
 module.exports = function(THREE) {
 
 // BEGIN original file //
@@ -440,7 +443,6 @@ module.exports = function(THREE) {
 
         // for zoom toggle
         var dollyDirection;
-        var desiredZoomScale;
 
         // for reset
 
@@ -970,6 +972,20 @@ module.exports = function(THREE) {
 
             }
             
+        },
+
+        zoomScaleStream : {
+
+            get: function () {
+
+                return kefir.fromEvents( this, 'change', function( event ) { 
+
+                    return event.target.zoomScale; 
+
+                } );
+
+            }
+
         },
 
         target: {
