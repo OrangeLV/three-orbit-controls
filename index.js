@@ -631,9 +631,15 @@ module.exports = function(THREE) {
 
         }
 
-        function onMouseUp( /* event */ ) {
+        function onMouseUp( event ) {
 
             if ( scope.enabled === false ) return;
+
+            if ( isDoubleClick( event ) === true ) {
+
+                scope.toggleZoom();
+
+            }
 
             document.removeEventListener( 'mousemove', onMouseMove, false );
             document.removeEventListener( 'mouseup', onMouseUp, false );
@@ -681,19 +687,22 @@ module.exports = function(THREE) {
 
         }
 
-        function onDoubleClick( event ) {
+        function isDoubleClick( event ) {
 
-            if ( event.type === 'touchstart' ) {
+            if ( event.type === 'touchend' ) {
+
+                if ( event.changedTouches.length != 1 ) return false;
 
                 event.preventDefault();
-
-                if ( event.touches.length > 1 ) return;
-
+                
             }
+
+            var click = event.changedTouches && event.changedTouches[0] || event;
+            click.type = event.type;
 
             if ( lastClick !== null ) {
 
-                var click = event.touches && event.touches[0] || event;
+                if ( lastClick.type !== click.type ) return false;
 
                 var horizontalDist = click.pageX - lastClick.pageX;
                 var verticalDist = click.pageY - lastClick.pageY;
@@ -701,14 +710,14 @@ module.exports = function(THREE) {
 
             } else {
 
-                lastClick = event.touches && event.touches[0] || event;
+                lastClick = click;
                 distFromLastClick = 0;
 
             }
 
             if ( distFromLastClick <= doubleTapRadius ) clicks++;
 
-            if ( clicks === 1 ) {
+            if ( clicks < 2 ) {
                 
                 setTimeout(function () {
                 
@@ -717,9 +726,11 @@ module.exports = function(THREE) {
 
                 }, wait);
 
+                return false;
+
             } else {
                 
-                scope.toggleZoom();
+                return true;
 
             }
         }
@@ -879,9 +890,15 @@ module.exports = function(THREE) {
 
         }
 
-        function touchend( /* event */ ) {
+        function touchend( event ) {
 
             if ( scope.enabled === false ) return;
+
+            if ( isDoubleClick( event ) === true ) {
+
+                scope.toggleZoom();
+
+            }
 
             scope.dispatchEvent( endEvent );
             state = STATE.NONE;
@@ -897,8 +914,6 @@ module.exports = function(THREE) {
         this.dispose = function() {
 
             this.domElement.removeEventListener( 'contextmenu', contextmenu, false );
-            this.domElement.removeEventListener( 'mousedown', onDoubleClick, false );
-            this.domElement.removeEventListener( 'touchstart', onDoubleClick, false );
             this.domElement.removeEventListener( 'mousedown', onMouseDown, false );
             this.domElement.removeEventListener( 'mousewheel', onMouseWheel, false );
             this.domElement.removeEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
@@ -916,8 +931,6 @@ module.exports = function(THREE) {
 
         this.domElement.addEventListener( 'contextmenu', contextmenu, false );
 
-        this.domElement.addEventListener( 'mousedown', onDoubleClick, false );
-        this.domElement.addEventListener( 'touchstart', onDoubleClick, false );
         this.domElement.addEventListener( 'mousedown', onMouseDown, false );
         this.domElement.addEventListener( 'mousewheel', onMouseWheel, false );
         this.domElement.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
