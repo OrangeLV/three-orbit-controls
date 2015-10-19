@@ -495,12 +495,11 @@ module.exports = function(THREE) {
 
         };
 
-        this.toggleZoom = function () {
+        this.setZoom = function ( desiredZoomScale ) {
 
             if ( scope.enabled === false || scope.enableZoom === false ) return;
 
-            dollyDirection = +constraint.zoomScale.toFixed(2) > 0 ? 'dollyIn' : 'dollyOut';
-            desiredZoomScale = dollyDirection === 'dollyIn' ? 0 : 1;
+            dollyDirection = desiredZoomScale === 1 ? 'dollyOut' : 'dollyIn';
 
             function updateZoom() {
 
@@ -637,7 +636,8 @@ module.exports = function(THREE) {
 
             if ( isDoubleClick( event ) === true ) {
 
-                scope.toggleZoom();
+                var desiredZoomScale = +constraint.zoomScale.toFixed(2) > 0 ? 0 : 1;
+                scope.setZoom(desiredZoomScale);
 
             }
 
@@ -691,7 +691,7 @@ module.exports = function(THREE) {
 
             if ( event.type === 'touchend' ) {
 
-                if ( event.changedTouches.length != 1 ) return false;
+                if ( event.changedTouches.length !== 1 ) return false;
 
                 event.preventDefault();
                 
@@ -896,7 +896,8 @@ module.exports = function(THREE) {
 
             if ( isDoubleClick( event ) === true ) {
 
-                scope.toggleZoom();
+                var desiredZoomScale = +constraint.zoomScale.toFixed(2) > 0 ? 0 : 1;
+                scope.setZoom(desiredZoomScale);
 
             }
 
