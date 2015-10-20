@@ -719,7 +719,7 @@ module.exports = function(THREE) {
 
             if ( distFromLastClick <= doubleTapRadius ) clicks++;
 
-            if ( clicks < 2 ) {
+            if ( clicks !== 2 ) {
                 
                 setTimeout(function () {
                 
