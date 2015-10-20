@@ -497,7 +497,7 @@ module.exports = function(THREE) {
 
         };
 
-        this.setZoom = function ( desiredZoomScale ) {
+        this.setZoomScale = function ( desiredZoomScale ) {
 
             if ( scope.enabled === false || scope.enableZoom === false ) return;
 
@@ -638,8 +638,8 @@ module.exports = function(THREE) {
 
             if ( isDoubleClick( event ) === true ) {
 
-                var desiredZoomScale = +constraint.zoomScale.toFixed(2) > 0 ? 0 : 1;
-                scope.setZoom(desiredZoomScale);
+                var desiredZoomScale = +constraint.zoomScale.toFixed( 2 ) > 0 ? 0 : 1;
+                scope.setZoomScale( desiredZoomScale );
 
             }
 
@@ -898,8 +898,8 @@ module.exports = function(THREE) {
 
             if ( isDoubleClick( event ) === true ) {
 
-                var desiredZoomScale = +constraint.zoomScale.toFixed(2) > 0 ? 0 : 1;
-                scope.setZoom(desiredZoomScale);
+                var desiredZoomScale = +constraint.zoomScale.toFixed( 2 ) > 0 ? 0 : 1;
+                scope.setZoomScale( desiredZoomScale );
 
             }
 
@@ -969,6 +969,12 @@ module.exports = function(THREE) {
             get: function () {
 
                 return this.constraint.zoomScale;
+
+            },
+
+            set: function ( value ) {
+
+                this.setZoomScale( value );
 
             }
             
