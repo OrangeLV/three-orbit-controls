@@ -1,5 +1,8 @@
 /*eslint semi: [2, "always"]*/
 /*eslint indent: 0*/
+
+require( 'ie-touch' );
+
 module.exports = function(THREE) {
 
 // BEGIN original file //
