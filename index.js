@@ -811,7 +811,7 @@ module.exports = function(THREE) {
 
         function contextmenu( event ) {
 
-            event.preventDefault();
+            // event.preventDefault();
 
         }
 
