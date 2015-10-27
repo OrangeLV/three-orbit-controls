@@ -65,6 +65,7 @@ module.exports = function(THREE) {
         var phiDelta = 0;
         var thetaDelta = 0;
         var scale = 1;
+        var scaleDelta = 0;
         var panOffset = new THREE.Vector3();
         var zoomChanged = false;
 
@@ -95,6 +96,12 @@ module.exports = function(THREE) {
             } else if(thetaDelta < -Math.PI) {
                 thetaDelta += Math.PI*2;
             }
+        };
+
+        this.setZoomScale = function ( desiredZoomScale ) {
+
+            scaleDelta = this.zoomScale - desiredZoomScale;
+
         };
 
         this.rotateLeft = function ( angle ) {
@@ -261,6 +268,8 @@ module.exports = function(THREE) {
                 // restrict phi to be betwee EPS and PI-EPS
                 phi = Math.max( EPS, Math.min( Math.PI - EPS, phi ) );
 
+                scale += scaleDelta * (( this.enableDamping === true ) ? this.dampingFactor : 1);
+
                 var radius = offset.length() * scale;
 
                 // restrict radius to be between desired limits
@@ -290,11 +299,13 @@ module.exports = function(THREE) {
 
                     thetaDelta *= ( 1 - this.dampingFactor );
                     phiDelta *= ( 1 - this.dampingFactor );
+                    scaleDelta *= ( 1 - this.dampingFactor );
 
                 } else {
 
                     thetaDelta = 0;
                     phiDelta = 0;
+                    scaleDelta = 0;
 
                 }
 
@@ -498,21 +509,7 @@ module.exports = function(THREE) {
 
             if ( scope.enabled === false || scope.enableZoom === false ) return;
 
-            dollyDirection = desiredZoomScale === 1 ? 'dollyOut' : 'dollyIn';
-
-            function updateZoom() {
-
-                constraint[dollyDirection]( getZoomScale() );
-                
-                if ( constraint.zoomScale !== desiredZoomScale ) {
-
-                    requestAnimationFrame( updateZoom );
-
-                } 
-
-            }
-
-            updateZoom();
+            constraint.setZoomScale( desiredZoomScale );
             
         };
 
@@ -635,7 +632,7 @@ module.exports = function(THREE) {
 
             if ( isDoubleClick( event ) === true ) {
 
-                var desiredZoomScale = +constraint.zoomScale.toFixed( 2 ) > 0 ? 0 : 1;
+                var desiredZoomScale = +constraint.zoomScale.toFixed( 2 ) > 0.15 ? 0 : 1;
                 scope.setZoomScale( desiredZoomScale );
 
             }
@@ -895,7 +892,7 @@ module.exports = function(THREE) {
 
             if ( isDoubleClick( event ) === true ) {
 
-                var desiredZoomScale = +constraint.zoomScale.toFixed( 2 ) > 0 ? 0 : 1;
+                var desiredZoomScale = +constraint.zoomScale.toFixed( 2 ) > 0.15 ? 0 : 1;
                 scope.setZoomScale( desiredZoomScale );
 
             }
