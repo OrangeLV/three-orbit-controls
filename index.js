@@ -1,5 +1,8 @@
 /*eslint semi: [2, "always"]*/
 /*eslint indent: 0*/
+
+var isDoubleClick = require( './isdoubleclick' );
+
 module.exports = function(THREE) {
 
 // BEGIN original file //
@@ -100,7 +103,15 @@ module.exports = function(THREE) {
 
         this.setZoomScale = function ( desiredZoomScale ) {
 
-            scaleDelta = this.zoomScale - desiredZoomScale;
+            if ( this.maxDistance < Infinity ) {
+
+                scaleDelta = desiredZoomScale - this.zoomScale;
+
+            } else { 
+
+                scaleDelta = this.zoomScale - desiredZoomScale;
+
+            }
 
         };
 
@@ -191,7 +202,19 @@ module.exports = function(THREE) {
 
             if ( scope.object instanceof THREE.PerspectiveCamera ) {
 
-                scale /= dollyScale;
+                if ( this.maxDistance < Infinity ) {
+
+                    var nextRadius = this._radius / dollyScale;
+                    nextRadius = Math.max( this.minDistance, Math.min( this.maxDistance, nextRadius ) );
+                    var nextZoomScale = (this.maxDistance - nextRadius) / (this.maxDistance - this.minDistance) || 0;
+
+                    this.zoomScale = nextZoomScale;
+
+                } else {
+
+                    scale /= dollyScale;
+
+                }
 
             } else if ( scope.object instanceof THREE.OrthographicCamera ) {
 
@@ -211,7 +234,19 @@ module.exports = function(THREE) {
 
             if ( scope.object instanceof THREE.PerspectiveCamera ) {
 
-                scale *= dollyScale;
+                if ( this.maxDistance < Infinity ) {
+
+                    var nextRadius = this._radius * dollyScale;
+                    nextRadius = Math.max( this.minDistance, Math.min( this.maxDistance, nextRadius ) );
+                    var nextZoomScale = (this.maxDistance - nextRadius) / (this.maxDistance - this.minDistance) || 0;
+
+                    this.zoomScale = nextZoomScale;
+
+                } else {
+
+                    scale *= dollyScale;
+
+                }
 
             } else if ( scope.object instanceof THREE.OrthographicCamera ) {
 
@@ -256,8 +291,37 @@ module.exports = function(THREE) {
 
                 phi = Math.atan2( Math.sqrt( offset.x * offset.x + offset.z * offset.z ), offset.y );
 
-                theta += thetaDelta * (( this.enableDamping === true ) ? this.dampingFactor : 1);
-                phi += phiDelta * (( this.enableDamping === true ) ? this.dampingFactor : 1);
+                if ( this.enableDamping === true ) {
+
+                    theta += thetaDelta * this.dampingFactor;
+                    phi += phiDelta * this.dampingFactor;
+
+                    if ( this.maxDistance < Infinity ) {
+
+                        this.zoomScale += scaleDelta * this.dampingFactor;
+
+                    } else {
+
+                        scale += scaleDelta;
+
+                    }
+
+                } else {
+
+                    theta += thetaDelta;
+                    phi += phiDelta;
+
+                    if ( this.maxDistance < Infinity ) {
+
+                        this.zoomScale += scaleDelta;
+
+                    } else {
+
+                        scale += scaleDelta;
+
+                    }
+
+                }
 
                 // restrict theta to be between desired limits
                 theta = Math.max( this.minAzimuthAngle, Math.min( this.maxAzimuthAngle, theta ) );
@@ -268,14 +332,23 @@ module.exports = function(THREE) {
                 // restrict phi to be betwee EPS and PI-EPS
                 phi = Math.max( EPS, Math.min( Math.PI - EPS, phi ) );
 
-                scale += scaleDelta * (( this.enableDamping === true ) ? this.dampingFactor : 1);
 
-                var radius = offset.length() * scale;
+                if ( this.maxDistance < Infinity ) {
 
-                // restrict radius to be between desired limits
-                radius = Math.max( this.minDistance, Math.min( this.maxDistance, radius ) );
+                    var radius = this.maxDistance - this.zoomScale * (this.maxDistance - this.minDistance) || offset.length();
+                    this._radius = radius;
 
-                this.zoomScale = (this.maxDistance - radius) / (this.maxDistance - this.minDistance) || 0;
+                } else {
+
+                    radius = offset.length() * scale;
+                    
+                    // restrict radius to be between desired limits
+                    radius = Math.max( this.minDistance, Math.min( this.maxDistance, radius ) );
+
+                    this.zoomScale = (this.maxDistance - radius) / (this.maxDistance - this.minDistance) || 0;
+
+                }
+
                 var peekScale = (this.maxPolarAngle - phi) /  (this.maxPolarAngle - this.minPolarAngle) * 2 - 1;
                 peekOffset.set(0, peekScale * this.zoomScale * this.peekDistance, 0);
 
@@ -441,13 +514,6 @@ module.exports = function(THREE) {
         var STATE = { NONE : - 1, ROTATE : 0, DOLLY : 1, PAN : 2, TOUCH_ROTATE : 3, TOUCH_DOLLY : 4, TOUCH_PAN : 5 };
 
         var state = STATE.NONE;
-
-        // for doubleclick tracking
-        var clicks = 0;
-        var wait = 300;
-        var doubleTapRadius = 24;
-        var lastClick = null;
-        var distFromLastClick = 0;
 
         // for zoom toggle
         var dollyDirection;
@@ -630,17 +696,17 @@ module.exports = function(THREE) {
 
             if ( scope.enabled === false ) return;
 
+            document.removeEventListener( 'mousemove', onMouseMove, false );
+            document.removeEventListener( 'mouseup', onMouseUp, false );
+            scope.dispatchEvent( endEvent );
+            state = STATE.NONE;
+
             if ( isDoubleClick( event ) === true ) {
 
                 var desiredZoomScale = +constraint.zoomScale.toFixed( 2 ) > 0.15 ? 0 : 1;
                 scope.setZoomScale( desiredZoomScale );
 
             }
-
-            document.removeEventListener( 'mousemove', onMouseMove, false );
-            document.removeEventListener( 'mouseup', onMouseUp, false );
-            scope.dispatchEvent( endEvent );
-            state = STATE.NONE;
 
         }
 
@@ -681,54 +747,6 @@ module.exports = function(THREE) {
             scope.dispatchEvent( startEvent );
             scope.dispatchEvent( endEvent );
 
-        }
-
-        function isDoubleClick( event ) {
-
-            if ( event.type === 'touchend' ) {
-
-                if ( event.changedTouches.length !== 1 ) return false;
-
-                event.preventDefault();
-                
-            }
-
-            var click = event.changedTouches && event.changedTouches[0] || event;
-            click.type = event.type;
-
-            if ( lastClick !== null ) {
-
-                if ( lastClick.type !== click.type ) return false;
-
-                var horizontalDist = click.pageX - lastClick.pageX;
-                var verticalDist = click.pageY - lastClick.pageY;
-                distFromLastClick = Math.sqrt( Math.pow( horizontalDist, 2 ) + Math.pow( verticalDist, 2 ) );
-
-            } else {
-
-                lastClick = click;
-                distFromLastClick = 0;
-
-            }
-
-            if ( distFromLastClick <= doubleTapRadius ) clicks++;
-
-            if ( clicks !== 2 ) {
-                
-                setTimeout(function () {
-                
-                    clicks = 0;
-                    lastClick = null;
-
-                }, wait);
-
-                return false;
-
-            } else {
-                
-                return true;
-
-            }
         }
 
         function onKeyDown( event ) {
@@ -890,15 +908,15 @@ module.exports = function(THREE) {
 
             if ( scope.enabled === false ) return;
 
+            scope.dispatchEvent( endEvent );
+            state = STATE.NONE;
+
             if ( isDoubleClick( event ) === true ) {
 
                 var desiredZoomScale = +constraint.zoomScale.toFixed( 2 ) > 0.15 ? 0 : 1;
                 scope.setZoomScale( desiredZoomScale );
 
             }
-
-            scope.dispatchEvent( endEvent );
-            state = STATE.NONE;
 
         }
 
