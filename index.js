@@ -498,7 +498,7 @@ module.exports = function(THREE) {
 
             if ( scope.enabled === false ) return;
 
-            event.preventDefault();
+            // event.preventDefault();
 
             if ( event.button === scope.mouseButtons.ORBIT ) {
 
