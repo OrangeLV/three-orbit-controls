@@ -1,7 +1,7 @@
 /*eslint semi: [2, "always"]*/
 /*eslint indent: 0*/
 
-var isDoubleClick = require( './isdoubleclick' );
+var isDoubleClick = require( './isDoubleClick' );
 
 module.exports = function(THREE) {
 
@@ -515,9 +515,6 @@ module.exports = function(THREE) {
 
         var state = STATE.NONE;
 
-        // for zoom toggle
-        var dollyDirection;
-
         // for reset
 
         this.target0 = this.target.clone();
@@ -703,7 +700,7 @@ module.exports = function(THREE) {
 
             if ( isDoubleClick( event ) === true ) {
 
-                var desiredZoomScale = +constraint.zoomScale.toFixed( 2 ) > 0.15 ? 0 : 1;
+                var desiredZoomScale = +constraint.zoomScale.toFixed( 2 ) > 0 ? 0 : 1;
                 scope.setZoomScale( desiredZoomScale );
 
             }
@@ -913,7 +910,7 @@ module.exports = function(THREE) {
 
             if ( isDoubleClick( event ) === true ) {
 
-                var desiredZoomScale = +constraint.zoomScale.toFixed( 2 ) > 0.15 ? 0 : 1;
+                var desiredZoomScale = +constraint.zoomScale.toFixed( 2 ) > 0 ? 0 : 1;
                 scope.setZoomScale( desiredZoomScale );
 
             }
