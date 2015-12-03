@@ -26,6 +26,9 @@ module.exports = function(THREE) {
         this.minDistance = 0;
         this.maxDistance = Infinity;
 
+        // Limits how far can the camera travel up and down when zooming on the poles
+        this.peekDistance = 0;
+
         // Limits to how far you can zoom in and out ( OrthographicCamera only )
         this.minZoom = 0;
         this.maxZoom = Infinity;
@@ -75,6 +78,21 @@ module.exports = function(THREE) {
 
             return theta;
 
+        };
+
+        this.setPolarAngle = function (angle) {
+
+            phiDelta = angle - phi;
+
+        };
+
+        this.setAzimuthalAngle = function (angle) {
+            thetaDelta = angle - theta;
+            if(thetaDelta > Math.PI) {
+                thetaDelta -= Math.PI*2;
+            } else if(thetaDelta < -Math.PI) {
+                thetaDelta += Math.PI*2;
+            }
         };
 
         this.rotateLeft = function ( angle ) {
@@ -203,6 +221,7 @@ module.exports = function(THREE) {
         this.update = function() {
 
             var offset = new THREE.Vector3();
+            var peekOffset = new THREE.Vector3();
 
             // so camera.up is the orbit axis
             var quat = new THREE.Quaternion().setFromUnitVectors( object.up, new THREE.Vector3( 0, 1, 0 ) );
@@ -215,7 +234,7 @@ module.exports = function(THREE) {
 
                 var position = this.object.position;
 
-                offset.copy( position ).sub( this.target );
+                offset.copy( position ).sub( this.target ).sub( peekOffset );
 
                 // rotate offset to "y-axis-is-up" space
                 offset.applyQuaternion( quat );
@@ -228,8 +247,8 @@ module.exports = function(THREE) {
 
                 phi = Math.atan2( Math.sqrt( offset.x * offset.x + offset.z * offset.z ), offset.y );
 
-                theta += thetaDelta;
-                phi += phiDelta;
+                theta += thetaDelta * (( this.enableDamping === true ) ? this.dampingFactor : 1);
+                phi += phiDelta * (( this.enableDamping === true ) ? this.dampingFactor : 1);
 
                 // restrict theta to be between desired limits
                 theta = Math.max( this.minAzimuthAngle, Math.min( this.maxAzimuthAngle, theta ) );
@@ -245,6 +264,10 @@ module.exports = function(THREE) {
                 // restrict radius to be between desired limits
                 radius = Math.max( this.minDistance, Math.min( this.maxDistance, radius ) );
 
+                var zoomScale = (this.maxDistance - radius) / (this.maxDistance - this.minDistance) || 0;
+                var peekScale = (this.maxPolarAngle - phi) /  (this.maxPolarAngle - this.minPolarAngle) * 2 - 1;
+                peekOffset.set(0, peekScale * zoomScale * this.peekDistance, 0);
+
                 // move target to panned location
                 this.target.add( panOffset );
 
@@ -258,6 +281,8 @@ module.exports = function(THREE) {
                 position.copy( this.target ).add( offset );
 
                 this.object.lookAt( this.target );
+
+                position.add(peekOffset);
 
                 if ( this.enableDamping === true ) {
 
@@ -334,6 +359,18 @@ module.exports = function(THREE) {
         this.getAzimuthalAngle = function () {
 
             return constraint.getAzimuthalAngle();
+
+        };
+
+        this.setPolarAngle = function (angle) {
+
+            constraint.setPolarAngle(angle);
+
+        };
+
+        this.setAzimuthalAngle = function (angle) {
+
+            constraint.setAzimuthalAngle(angle);
 
         };
 
@@ -774,7 +811,7 @@ module.exports = function(THREE) {
 
         function contextmenu( event ) {
 
-            event.preventDefault();
+            // event.preventDefault();
 
         }
 
@@ -872,6 +909,22 @@ module.exports = function(THREE) {
             set: function ( value ) {
 
                 this.constraint.maxDistance = value;
+
+            }
+
+        },
+
+        peekDistance : {
+
+            get: function () {
+
+                return this.constraint.peekDistance;
+
+            },
+
+            set: function ( value ) {
+
+                this.constraint.peekDistance = value;
 
             }
 
