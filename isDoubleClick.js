@@ -6,14 +6,6 @@ var distFromLastClick = 0
 
 function isDoubleClick( event ) {
 
-    if ( event.type === 'touchend' ) {
-
-        if ( event.changedTouches.length !== 1 ) return false
-
-        event.preventDefault()
-        
-    }
-
     var click = event.changedTouches && event.changedTouches[0] || event
     click.type = event.type
 
